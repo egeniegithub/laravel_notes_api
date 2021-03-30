@@ -20,11 +20,11 @@ Route::group(['middleware' => 'api', 'prefix' => 'v1'], function ($router) {
 
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/updateuser', [AuthController::class, 'updateuser']);
+    Route::post('/update-user', [AuthController::class, 'update_user']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
     Route::get('/me', [AuthController::class, 'me']);
-    Route::get('/allusers', [AuthController::class, 'allusers']);
+    Route::get('/all-users', [AuthController::class, 'all_users']);
 
     //note
 
@@ -38,7 +38,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'v1'], function ($router) {
         Route::put('/delete', [NotesController::class, 'delete_note']);
     });
 
-        Route::group(['prefix' => 'likes'], function () {
+    Route::group(['prefix' => 'likes'], function () {
         //like note
         Route::post('/like', [LikeController::class, 'like_note']);
     });
