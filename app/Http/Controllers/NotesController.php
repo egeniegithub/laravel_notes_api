@@ -28,16 +28,16 @@ class NotesController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function my_notes(Request $request)
+    public function my_notes(Request $request,Note $note)
     {
         $query = $request->input('query');
-
+        $my_notes=[];
         if (!empty($query) && $query !== null && $query !== '') {
             $user_notes = Note::where('name', 'LIKE', "%" . $request->input('query') . "%")
                 ->orwhere('description', 'LIKE', "%" . $request->input('query') . "%")
                 ->where('user_id', auth()->user()->id)->get();
         } else {
-            $user_notes = $notes->where('user_id', auth()->user()->id)->get();
+            $user_notes = $note->where('user_id', auth()->user()->id)->get();
         }
 
         return response()->json(["status" => "success", "message" => "Notes Listed!", "data" => $user_notes]);
@@ -120,10 +120,10 @@ class NotesController extends Controller
     {
         $note_id = $request->input('note_id');
 
-        $note = Note::where('note_id', $note_id);
-
-        if ($note->user_id !== Auth::id()) {
-            $like = Like::create(["user_id" => Auth::id(), 'note_id' => $note_id]);
+        $note = Note::where('id', $note_id)->get()->toArray();
+    
+        if ($note[0]['user_id']!== Auth::user()->id) {
+            $like = Like::create(["user_id" => Auth::user()->id, 'note_id' => $note_id]);
             return response()->json([
                 "status" => "success",
                 'message' => 'you have liked the note',

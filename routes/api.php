@@ -35,7 +35,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'v1'], function ($router) {
         Route::post('/create', [NotesController::class, 'create_note']);
         Route::post('/update', [NotesController::class, 'update_note']);
         Route::put('/delete', [NotesController::class, 'delete_note']);
-        Route::post('/like', [LikeController::class, 'like']);
+        Route::post('/like', [NotesController::class, 'like']);
 
     });
 
