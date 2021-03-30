@@ -11,6 +11,11 @@ use Validator;
 class NotesController extends Controller
 {
 
+    public function __construct() {
+        $this->middleware('auth:api');
+    }
+	
+
     public function index()
     {
         $notes = notes::all();
@@ -22,10 +27,9 @@ class NotesController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function my_notes()
+    public function my_notes(notes $notes)
     {
-        $my_notes = notes::where('user_id', auth()->user()->id)->get();
-        return response()->json($my_notes);
+        return response()->json($notes->where('user_id',auth()->user()->id)->get());
     }
 
     /**
@@ -33,12 +37,11 @@ class NotesController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function filter($query)
+    public function filter_notes(Request $request)
     {
-        $notes = notes::where('name', 'like', '%' . $query . '%')
-            ->orwhere('description', 'like', '%' . $query . '%')
-            ->get();
-
+        $notes = notes::where('name', 'LIKE', "%".$request->input('query')."%")
+                ->orwhere('description', 'LIKE', "%".$request->input('query')."%")   
+                ->get();
         return response()->json($notes);
     }
 
@@ -58,10 +61,13 @@ class NotesController extends Controller
             return response()->json($validator->errors()->toJson(), 400);
         }
 
-        $note = notes::create($request->all());
+        $user=["user_id"=>auth()->user()->id];
+		$data=array_merge($request->all(),$user);
+        $note = notes::create($data);
         if ($note) {
             return response()->json([
                 'message' => 'note created successfully',
+                'data'=> $note
             ], 201);
         }
     }
@@ -73,22 +79,16 @@ class NotesController extends Controller
      */
     public function update_note(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|between:2,100',
-            'description' => 'required|string|between:2,100',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
-        }
-
-        $note = notes::find($request->id);
+        
+    
+        $note = notes::findorfail($request->id);
         $note->name = $request->name;
         $note->description = $request->description;
 
         if ($note) {
             return response()->json([
                 'message' => 'note updated successfully',
+                'data'=> $note
             ], 201);
         }
 
@@ -99,9 +99,10 @@ class NotesController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function delete_note($id)
+    public function delete_note(Request $request)
     {
-        $note = notes::find($id)->delete();
+        $note = notes::findOrFail($request->id);
+		$note->delete();
         if ($note) {
             return response()->json([
                 'message' => 'note deleted successfully',

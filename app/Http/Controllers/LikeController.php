@@ -26,7 +26,7 @@ class LikeController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-	public function likenote(Request $request){
+	public function like_note(Request $request){
 		
         $note = like::where('user_id',auth()->user()->id)->where('note_id',$request->note_id)->get();
 		if(count($note)==1){
@@ -35,10 +35,13 @@ class LikeController extends Controller
         ], 203);
 		}
 		else{
-			$like=like::create(['user_id'=>auth()->user()->id,'note_id'=>$request->note_id]);
+            $user=["user_id"=>auth()->user()->id];
+            $data=array_merge($request->all(),$user);
+			$like=like::create($data);
 			if($like){
 			return response()->json([
             'message' => 'you have liked the note',
+            'data'=>$like
         ], 201);
 			}else{
 			return response()->json([

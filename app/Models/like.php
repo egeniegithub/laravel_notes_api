@@ -15,8 +15,5 @@ class like extends Model
      *
      * @var array
      */
-    protected $fillable = [
-        'user_id',
-        'note_id',
-    ];
+    protected $fillable = [ 'user_id',  'note_id' ];
 }

@@ -28,15 +28,17 @@ Route::group(['middleware' => 'api', 'prefix' => 'v1'], function ($router) {
 
     //note
 
-    Route::group(['prefix' => 'notes'], function ($router) {
+    Route::group(['prefix' => 'notes'], function () {
         Route::get('/all', [NotesController::class, 'index']);
         Route::get('/my_notes', [NotesController::class, 'my_notes']);
 
-        Route::get('/filter/{query?}', [NotesController::class, 'filter']);
+        Route::post('/filter_notes', [NotesController::class, 'filter_notes']);
         Route::post('/create', [NotesController::class, 'create_note']);
         Route::post('/update', [NotesController::class, 'update_note']);
-        Route::get('/delete/{id?}', [NotesController::class, 'delete_note']);
+        Route::put('/delete', [NotesController::class, 'delete_note']);
+    });
 
+        Route::group(['prefix' => 'likes'], function () {
         //like note
         Route::post('/like', [LikeController::class, 'like_note']);
     });
