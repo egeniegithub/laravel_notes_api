@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\notes;
+use App\Models\Like;
+use App\Models\Note;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,8 +19,8 @@ class NotesController extends Controller
 
     public function index()
     {
-        $notes = notes::all();
-        return response()->json($notes);
+        $notes = Note::all();
+        return response()->json(["status" => "success", "message" => "Notes Listed!", "data" => $notes]);
     }
 
     /**
@@ -27,22 +28,19 @@ class NotesController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function my_notes(notes $notes)
+    public function my_notes(Request $request)
     {
-        return response()->json($notes->where('user_id', auth()->user()->id)->get());
-    }
+        $query = $request->input('query');
 
-    /**
-     * Get all notes.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function filter_notes(Request $request)
-    {
-        $notes = notes::where('name', 'LIKE', "%" . $request->input('query') . "%")
-            ->orwhere('description', 'LIKE', "%" . $request->input('query') . "%")
-            ->get();
-        return response()->json($notes);
+        if (!empty($query) && $query !== null && $query !== '') {
+            $user_notes = Note::where('name', 'LIKE', "%" . $request->input('query') . "%")
+                ->orwhere('description', 'LIKE', "%" . $request->input('query') . "%")
+                ->where('user_id', auth()->user()->id)->get();
+        } else {
+            $user_notes = $notes->where('user_id', auth()->user()->id)->get();
+        }
+
+        return response()->json(["status" => "success", "message" => "Notes Listed!", "data" => $user_notes]);
     }
 
     /**
@@ -58,14 +56,15 @@ class NotesController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
+            return response()->json(["status" => "failed", "data" => $validator->errors()->toJson()], 400);
         }
 
         $user = ["user_id" => auth()->user()->id];
         $data = array_merge($request->all(), $user);
-        $note = notes::create($data);
+        $note = Note::create($data);
         if ($note) {
             return response()->json([
+                "status" => "success",
                 'message' => 'note created successfully',
                 'data' => $note,
             ], 201);
@@ -80,12 +79,13 @@ class NotesController extends Controller
     public function update_note(Request $request)
     {
 
-        $note = notes::findorfail($request->id);
+        $note = Note::findorfail($request->id);
         $note->name = $request->name;
         $note->description = $request->description;
 
         if ($note) {
             return response()->json([
+                "status" => "success",
                 'message' => 'note updated successfully',
                 'data' => $note,
             ], 201);
@@ -100,12 +100,41 @@ class NotesController extends Controller
      */
     public function delete_note(Request $request)
     {
-        $note = notes::findOrFail($request->id);
+        $note = Note::findOrFail($request->id);
         $note->delete();
         if ($note) {
             return response()->json([
+                "status" => "success",
                 'message' => 'note deleted successfully',
+                "data" => [],
             ], 201);
+        }
+    }
+
+    /**
+     * Like notes.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function like(Request $request)
+    {
+        $note_id = $request->input('note_id');
+
+        $note = Note::where('note_id', $note_id);
+
+        if ($note->user_id !== Auth::id()) {
+            $like = Like::create(["user_id" => Auth::id(), 'note_id' => $note_id]);
+            return response()->json([
+                "status" => "success",
+                'message' => 'you have liked the note',
+                'data' => $like,
+            ], 201);
+        } else {
+            return response()->json([
+                "status" => "failed",
+                'message' => 'You cannot Like your own note!',
+                "data" => [],
+            ], 203);
         }
     }
 }
